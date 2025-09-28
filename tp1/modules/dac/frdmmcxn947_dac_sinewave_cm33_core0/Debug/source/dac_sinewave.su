@@ -1,0 +1,7 @@
+/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/drivers/fsl_dac.h:284:20:DAC_Enable	16	static
+/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/drivers/fsl_dac.h:393:20:DAC_SetData	16	static
+/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/drivers/fsl_ctimer.h:517:20:CTIMER_StartTimer	16	static
+../source/dac_sinewave.c:36:13:DEMO_CtimerConfig	32	static
+../source/dac_sinewave.c:54:13:DEMO_DacConfig	40	static
+../source/dac_sinewave.c:63:13:ctimer_match0_callback	24	static
+../source/dac_sinewave.c:81:5:main	32	static

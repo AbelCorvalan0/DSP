@@ -1,0 +1,64 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+# Add inputs and outputs from these tool invocations to the build variables 
+C_SRCS += \
+../drivers/fsl_clock.c \
+../drivers/fsl_common.c \
+../drivers/fsl_common_arm.c \
+../drivers/fsl_ctimer.c \
+../drivers/fsl_dac.c \
+../drivers/fsl_gpio.c \
+../drivers/fsl_inputmux.c \
+../drivers/fsl_lpflexcomm.c \
+../drivers/fsl_lpuart.c \
+../drivers/fsl_reset.c \
+../drivers/fsl_spc.c \
+../drivers/fsl_vref.c 
+
+C_DEPS += \
+./drivers/fsl_clock.d \
+./drivers/fsl_common.d \
+./drivers/fsl_common_arm.d \
+./drivers/fsl_ctimer.d \
+./drivers/fsl_dac.d \
+./drivers/fsl_gpio.d \
+./drivers/fsl_inputmux.d \
+./drivers/fsl_lpflexcomm.d \
+./drivers/fsl_lpuart.d \
+./drivers/fsl_reset.d \
+./drivers/fsl_spc.d \
+./drivers/fsl_vref.d 
+
+OBJS += \
+./drivers/fsl_clock.o \
+./drivers/fsl_common.o \
+./drivers/fsl_common_arm.o \
+./drivers/fsl_ctimer.o \
+./drivers/fsl_dac.o \
+./drivers/fsl_gpio.o \
+./drivers/fsl_inputmux.o \
+./drivers/fsl_lpflexcomm.o \
+./drivers/fsl_lpuart.o \
+./drivers/fsl_reset.o \
+./drivers/fsl_spc.o \
+./drivers/fsl_vref.o 
+
+
+# Each subdirectory must supply rules for building sources it contributes
+drivers/%.o: ../drivers/%.c drivers/subdir.mk
+	@echo 'Building file: $<'
+	@echo 'Invoking: MCU C Compiler'
+	arm-none-eabi-gcc -std=gnu99 -D__REDLIB__ -DCPU_MCXN947VDF -DCPU_MCXN947VDF_cm33 -DCPU_MCXN947VDF_cm33_core0 -DMCUXPRESSO_SDK -DSDK_DEBUGCONSOLE=1 -DMCUX_META_BUILD -DMCXN947_cm33_core0_SERIES -DDISABLEFLOAT16 -DCR_INTEGER_PRINTF -DPRINTF_FLOAT_ENABLE=0 -D__MCUXPRESSO -D__USE_CMSIS -DDEBUG -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/source" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/drivers" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/CMSIS/DSP/Include" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/CMSIS/DSP/PrivateInclude" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/CMSIS/DSP/Source/DistanceFunctions" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/CMSIS" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/CMSIS/m-profile" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/device" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/device/periph" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/utilities" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/utilities/str" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/utilities/debug_console_lite" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/component/uart" -I"/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/board" -O0 -fno-common -g3 -gdwarf-4 -mcpu=cortex-m33 -c -ffunction-sections -fdata-sections -fno-builtin -imacros "/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_dac_sinewave_cm33_core0/source/mcux_config.h" -fmerge-constants -fmacro-prefix-map="$(<D)/"= -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -D__REDLIB__ -fstack-usage -specs=redlib.specs -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+
+clean: clean-drivers
+
+clean-drivers:
+	-$(RM) ./drivers/fsl_clock.d ./drivers/fsl_clock.o ./drivers/fsl_common.d ./drivers/fsl_common.o ./drivers/fsl_common_arm.d ./drivers/fsl_common_arm.o ./drivers/fsl_ctimer.d ./drivers/fsl_ctimer.o ./drivers/fsl_dac.d ./drivers/fsl_dac.o ./drivers/fsl_gpio.d ./drivers/fsl_gpio.o ./drivers/fsl_inputmux.d ./drivers/fsl_inputmux.o ./drivers/fsl_lpflexcomm.d ./drivers/fsl_lpflexcomm.o ./drivers/fsl_lpuart.d ./drivers/fsl_lpuart.o ./drivers/fsl_reset.d ./drivers/fsl_reset.o ./drivers/fsl_spc.d ./drivers/fsl_spc.o ./drivers/fsl_vref.d ./drivers/fsl_vref.o
+
+.PHONY: clean-drivers
+
