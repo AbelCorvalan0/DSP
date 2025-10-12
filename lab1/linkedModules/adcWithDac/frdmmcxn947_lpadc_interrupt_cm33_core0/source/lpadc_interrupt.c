@@ -41,7 +41,7 @@ const uint32_t g_LpadcResultShift = 3U;
 
 
 /* Build up buffer1 */
-#define BUFFER_SIZE 8
+#define BUFFER_SIZE 512
 
 // Define BUFFER1
 // Buffer's data
@@ -125,25 +125,30 @@ uint16_t waveForm[512] = {
 };
 
 /* Clock configurations */
-void configClocks      (void);
+void configClocks       (void);
 
 /* Pin configuration functions */
-void configDacPin      (void);
-
+void configDacPin       (void);
+void configTimer        (void);
+void configMat0Pin      (void);
+void configMat1Pin      (void);
 
 /* Functional functions */
-void configDac         (void);
+void configDac          (void);
+void showDataInDAC      (void);
 
 /* Sample processing functions */
-void showBuffer        (void);
-void conv_12_q15       (void);
+void showBuffer         (void);
+void loadData(uint16_t sample);
+
+//void conv_12_q15       (void);
 
 /* Test wave form functions */
-void genWave           (void);
+//void genWave           (void);
 
 
 /* Test functions */
-void delay  (uint32_t times);
+void delay   (uint32_t times);
 void showSamplesIntoDAC(void);
 /*******************************************************************************
  * Code
@@ -173,7 +178,7 @@ int main(void)
 
     BOARD_InitHardware();
 
-    // Config Clocks.
+    // Configuring Clocks.
     configClocks();
 
     PRINTF("LPADC Interrupt Example\r\n");
@@ -276,23 +281,32 @@ int main(void)
     showBuffer();
     configDacPin();
     configDac();
+    configTimer();
+
     PRINTF("Please press any key to get user channel's ADC value.\r\n");
     while (1)
     {
-    	showSamplesIntoDAC();
-//        GETCHAR();
-//        LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
-//        while (!g_LpadcConversionCompletedFlag)
-//        {
-//        }
-//
-//        buffer1[ind]= (g_LpadcResultConfigStruct.convValue);
-//        ind= (ind + 1)%BUFFER_SIZE;
-//        PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
-//               ((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
-//        g_LpadcConversionCompletedFlag = false;
-//        showBuffer();
+    	//showSamplesIntoDAC();
+        //GETCHAR();
+        LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
+        while (!g_LpadcConversionCompletedFlag)
+        {
+        }
+        PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
+               ((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
+        loadData(g_LpadcResultConfigStruct.convValue);
+        g_LpadcConversionCompletedFlag = false;
+
+        //showBuffer();
+        showDataInDAC();
     }
+}
+
+void loadData(uint16_t sample){
+	static int k= 0;
+    buffer1[k]= (g_LpadcResultConfigStruct.convValue);
+    PRINTF("The sample was loaded successfully \r\n");
+    k= (k + 1)%BUFFER_SIZE;
 }
 
 void showBuffer(){
@@ -335,7 +349,66 @@ void configClocks(){
     /* enable DAC0 and VREF */
     SPC_EnableActiveModeAnalogModules(SPC0, (1UL << 0UL | 1UL << 4UL));
 
+    /* Use FRO HF clock for some of the Ctimers */
+    CLOCK_SetClkDiv(kCLOCK_DivCtimer4Clk, 1u);
+    CLOCK_AttachClk(kFRO_HF_to_CTIMER4);
+
 }
+/* A Configurar */
+void configMat0Pin(){
+    const port_pin_config_t port3_2_pinD15_config = {/* Internal pull-up/down resistor is disabled */
+                                                     .pullSelect = kPORT_PullDisable,
+                                                     /* Low internal pull resistor value is selected. */
+                                                     .pullValueSelect = kPORT_LowPullResistor,
+                                                     /* Fast slew rate is configured */
+                                                     .slewRate = kPORT_FastSlewRate,
+                                                     /* Passive input filter is disabled */
+                                                     .passiveFilterEnable = kPORT_PassiveFilterDisable,
+                                                     /* Open drain output is disabled */
+                                                     .openDrainEnable = kPORT_OpenDrainDisable,
+                                                     /* Low drive strength is configured */
+                                                     .driveStrength = kPORT_LowDriveStrength,
+                                                     /* Pin is configured as CT4_MAT0 */
+                                                     .mux = kPORT_MuxAlt4,
+                                                     /* Digital input enabled */
+                                                     .inputBuffer = kPORT_InputBufferEnable,
+                                                     /* Digital input is not inverted */
+                                                     .invertInput = kPORT_InputNormal,
+                                                     /* Pin Control Register fields [15:0] are not locked */
+                                                     .lockRegister = kPORT_UnlockRegister};
+    /* PORT3_2 (pin D15) is configured as CT4_MAT0 */
+    PORT_SetPinConfig(PORT3, 2U, &port3_2_pinD15_config);
+}
+/* A Configurar */
+void configMat1Pin(){
+    const port_pin_config_t port3_3_pinD16_config = {/* Internal pull-up/down resistor is disabled */
+                                                     .pullSelect = kPORT_PullDisable,
+                                                     /* Low internal pull resistor value is selected. */
+                                                     .pullValueSelect = kPORT_LowPullResistor,
+                                                     /* Fast slew rate is configured */
+                                                     .slewRate = kPORT_FastSlewRate,
+                                                     /* Passive input filter is disabled */
+                                                     .passiveFilterEnable = kPORT_PassiveFilterDisable,
+                                                     /* Open drain output is disabled */
+                                                     .openDrainEnable = kPORT_OpenDrainDisable,
+                                                     /* Low drive strength is configured */
+                                                     .driveStrength = kPORT_LowDriveStrength,
+                                                     /* Pin is configured as CT4_MAT1 */
+                                                     .mux = kPORT_MuxAlt4,
+                                                     /* Digital input enabled */
+                                                     .inputBuffer = kPORT_InputBufferEnable,
+                                                     /* Digital input is not inverted */
+                                                     .invertInput = kPORT_InputNormal,
+                                                     /* Pin Control Register fields [15:0] are not locked */
+                                                     .lockRegister = kPORT_UnlockRegister};
+    /* PORT3_3 (pin D16) is configured as CT4_MAT1 */
+    PORT_SetPinConfig(PORT3, 3U, &port3_3_pinD16_config);
+}
+
+void configTimer(){
+
+}
+
 
 //void genWave(){
 //	for(int i=0; i<SIZE_WAVE_FORM; i++)
@@ -347,15 +420,26 @@ void configClocks(){
 //	}
 //}
 
-void showSamplesIntoDAC(){
+/* TEST DAC */
+//void showSamplesIntoDAC(){
+//
+//	static int indexWaveForm= 0;
+//	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
+//    dacValue = waveForm[indexWaveForm]; // Show actual value.
+//    //dacValue = 3000;
+//	DAC_SetData(DAC0, dacValue);
+//	delay(100);
+//	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
+//}
 
-	static int indexWaveForm= 0;
-	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
-    dacValue = waveForm[indexWaveForm]; //VEMOS EL VALOR ACTUAL DEL DAC
+void showDataInDAC(){
+	static int indexWaveForm2= 0;
+	PRINTF("El valor en DAC en la posición %d es: %u\r\n", indexWaveForm2, buffer1[indexWaveForm2]>>3);
+    dacValue = buffer1[indexWaveForm2]>>3; //VEMOS EL VALOR ACTUAL DEL DAC
     //dacValue = 3000;
 	DAC_SetData(DAC0, dacValue);
-	delay(100);
-	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
+	delay(3000);
+	indexWaveForm2 = (indexWaveForm2+1)% BUFFER_SIZE;
 }
 
 void delay(uint32_t times){
