@@ -290,17 +290,7 @@ int main(void)
     {
     	//showSamplesIntoDAC();
         //GETCHAR();
-        LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
-        while (!g_LpadcConversionCompletedFlag)
-        {
-        }
-        PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
-               ((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
-        loadData(g_LpadcResultConfigStruct.convValue);
-        g_LpadcConversionCompletedFlag = false;
 
-        //showBuffer();
-        showDataInDAC();
     }
 }
 
@@ -415,6 +405,18 @@ void  CTIMER0_IRQHandler()
 //	valueDAC = waveForm[index]; //VEMOS EL VALOR ACTUAL DEL DAC
 //	DAC_SetData(DAC0, waveForm[index]);
 //	index = (index+1)% SIZE_WAVE_FORM;		//INDICE CIRCULAR
+
+	LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
+	//while (!g_LpadcConversionCompletedFlag){}
+	PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
+			((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
+	loadData(g_LpadcResultConfigStruct.convValue);
+	g_LpadcConversionCompletedFlag = false;
+
+	//showBuffer();
+
+	// Write sample in DAC pin.
+	showDataInDAC();
 
 	PRINTF("MATCH3 T0: \r\n");
 	CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match3Flag);//LIMPIO FLAG DE TIMER 0
