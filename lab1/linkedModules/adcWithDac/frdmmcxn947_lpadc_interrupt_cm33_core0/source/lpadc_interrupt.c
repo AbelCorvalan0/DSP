@@ -16,6 +16,7 @@
 
 #include "fsl_port.h"
 #include "fsl_dac.h"
+#include "fsl_ctimer.h"
 
 /*******************************************************************************
  * Definitions
@@ -41,7 +42,7 @@ const uint32_t g_LpadcResultShift = 3U;
 
 
 /* Build up buffer1 */
-#define BUFFER_SIZE 512
+#define BUFFER_SIZE              512
 
 // Define BUFFER1
 // Buffer's data
@@ -49,12 +50,12 @@ static uint16_t buffer1[BUFFER_SIZE];
 //static int ind=0;
 
 /* DAC variables */
-volatile uint16_t dacValue= 0;
+volatile uint16_t dacValue =       0;
 
 /* Define test wave form for DAC */
-#define SIZE_WAVE_FORM	  512
+#define SIZE_WAVE_FORM	         512
 //uint16_t waveForm[SIZE_WAVE_FORM];
-uint16_t indexWaveForm = 0;
+uint16_t indexWaveForm     =       0;
 
 // 512-sample sine wave for 12-bit DAC
 uint16_t waveForm[512] = {
@@ -129,9 +130,9 @@ void configClocks       (void);
 
 /* Pin configuration functions */
 void configDacPin       (void);
-void configTimer        (void);
-void configMat0Pin      (void);
-void configMat1Pin      (void);
+void configTimerMatch   (void);
+void configMat3Pin      (void);
+
 
 /* Functional functions */
 void configDac          (void);
@@ -281,8 +282,9 @@ int main(void)
     showBuffer();
     configDacPin();
     configDac();
-    configTimer();
-
+    configMat3Pin();
+    configTimerMatch();
+    //EnableIRQ(CTIMER0_IRQn);
     PRINTF("Please press any key to get user channel's ADC value.\r\n");
     while (1)
     {
@@ -339,6 +341,9 @@ void configDac(){
 }
 
 void configClocks(){
+
+	//CLOCK_EnableClock(kCLOCK_Scg);                     /*!< Enable SCG clock */
+
     /* Enables the clock for PORT4 (DAC P4.2): */
     CLOCK_EnableClock(kCLOCK_Port4);
 
@@ -349,66 +354,72 @@ void configClocks(){
     /* enable DAC0 and VREF */
     SPC_EnableActiveModeAnalogModules(SPC0, (1UL << 0UL | 1UL << 4UL));
 
+    /* Enable CTIMER0 clock */
+    CLOCK_EnableClock(kCLOCK_Timer0);
+    /*!< Switch CTIMER0 to CLK_1M */
+    CLOCK_AttachClk(kCLK_1M_to_CTIMER0);
     /* Use FRO HF clock for some of the Ctimers */
-    CLOCK_SetClkDiv(kCLOCK_DivCtimer4Clk, 1u);
-    CLOCK_AttachClk(kFRO_HF_to_CTIMER4);
+    CLOCK_SetClkDiv(kCLOCK_DivCtimer0Clk, 1u);
+    CLOCK_AttachClk(kFRO_HF_to_CTIMER0);
+
+    /* Enables the clock for PORT0 controller: Enables clock */
+    CLOCK_EnableClock(kCLOCK_Port0);
 
 }
 /* A Configurar */
-void configMat0Pin(){
-    const port_pin_config_t port3_2_pinD15_config = {/* Internal pull-up/down resistor is disabled */
-                                                     .pullSelect = kPORT_PullDisable,
-                                                     /* Low internal pull resistor value is selected. */
-                                                     .pullValueSelect = kPORT_LowPullResistor,
-                                                     /* Fast slew rate is configured */
-                                                     .slewRate = kPORT_FastSlewRate,
-                                                     /* Passive input filter is disabled */
-                                                     .passiveFilterEnable = kPORT_PassiveFilterDisable,
-                                                     /* Open drain output is disabled */
-                                                     .openDrainEnable = kPORT_OpenDrainDisable,
-                                                     /* Low drive strength is configured */
-                                                     .driveStrength = kPORT_LowDriveStrength,
-                                                     /* Pin is configured as CT4_MAT0 */
-                                                     .mux = kPORT_MuxAlt4,
-                                                     /* Digital input enabled */
-                                                     .inputBuffer = kPORT_InputBufferEnable,
-                                                     /* Digital input is not inverted */
-                                                     .invertInput = kPORT_InputNormal,
-                                                     /* Pin Control Register fields [15:0] are not locked */
-                                                     .lockRegister = kPORT_UnlockRegister};
-    /* PORT3_2 (pin D15) is configured as CT4_MAT0 */
-    PORT_SetPinConfig(PORT3, 2U, &port3_2_pinD15_config);
-}
-/* A Configurar */
-void configMat1Pin(){
-    const port_pin_config_t port3_3_pinD16_config = {/* Internal pull-up/down resistor is disabled */
-                                                     .pullSelect = kPORT_PullDisable,
-                                                     /* Low internal pull resistor value is selected. */
-                                                     .pullValueSelect = kPORT_LowPullResistor,
-                                                     /* Fast slew rate is configured */
-                                                     .slewRate = kPORT_FastSlewRate,
-                                                     /* Passive input filter is disabled */
-                                                     .passiveFilterEnable = kPORT_PassiveFilterDisable,
-                                                     /* Open drain output is disabled */
-                                                     .openDrainEnable = kPORT_OpenDrainDisable,
-                                                     /* Low drive strength is configured */
-                                                     .driveStrength = kPORT_LowDriveStrength,
-                                                     /* Pin is configured as CT4_MAT1 */
-                                                     .mux = kPORT_MuxAlt4,
-                                                     /* Digital input enabled */
-                                                     .inputBuffer = kPORT_InputBufferEnable,
-                                                     /* Digital input is not inverted */
-                                                     .invertInput = kPORT_InputNormal,
-                                                     /* Pin Control Register fields [15:0] are not locked */
-                                                     .lockRegister = kPORT_UnlockRegister};
-    /* PORT3_3 (pin D16) is configured as CT4_MAT1 */
-    PORT_SetPinConfig(PORT3, 3U, &port3_3_pinD16_config);
-}
+void configMat3Pin(){
+    /* PORT0_5 (pin A14) is configured as CT0_MAT3 */
+    PORT_SetPinMux(PORT0, 5U, kPORT_MuxAlt4);
 
-void configTimer(){
+    PORT0->PCR[5] = ((PORT0->PCR[5] &
+                      /* Mask bits to zero which are setting */
+                      (~(PORT_PCR_IBE_MASK)))
+
+                     /* Input Buffer Enable: Enables. */
+                     | PORT_PCR_IBE(0x01u));
 
 }
 
+
+void configTimerMatch(){
+	/* Create configuration structure of TIM0*/
+	ctimer_config_t CTIMER0_config;
+
+	CTIMER0_config.mode     = kCTIMER_TimerMode;
+	CTIMER0_config.input    = 0; //kCTIMER_Capture_0
+	CTIMER0_config.prescale = 1;
+	/* CTIMER0 peripheral initialization */
+	CTIMER_Init(CTIMER0, &CTIMER0_config);
+
+	/* Match 3 configuration */
+    ctimer_match_config_t CTIMER0_Match_3_config;
+
+    // Match value 1 second.
+    CTIMER0_Match_3_config.matchValue         =                999999;
+	CTIMER0_Match_3_config.enableCounterReset =                  true;
+	CTIMER0_Match_3_config.enableCounterStop  =                 false;
+	CTIMER0_Match_3_config.outControl         = kCTIMER_Output_Toggle;
+	CTIMER0_Match_3_config.outPinInitState    =                 false;
+	CTIMER0_Match_3_config.enableInterrupt    =                  true;
+
+	/* Match channel 3 of CTIMER0 peripheral initialization */
+	CTIMER_SetupMatch(CTIMER0, kCTIMER_Match_3, &CTIMER0_Match_3_config);
+	/* Start the timer */
+	CTIMER_StartTimer(CTIMER0);
+}
+
+void  CTIMER0_IRQHandler()
+{
+//    //PRINTF("FLAG GPIO0_6 = %d \r\n", GPIO_PinGetInterruptFlag(GPIO0, 6));
+//
+//	valueDAC = waveForm[index]; //VEMOS EL VALOR ACTUAL DEL DAC
+//	DAC_SetData(DAC0, waveForm[index]);
+//	index = (index+1)% SIZE_WAVE_FORM;		//INDICE CIRCULAR
+
+	PRINTF("MATCH3 T0: \r\n");
+	CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match3Flag);//LIMPIO FLAG DE TIMER 0
+
+}
 
 //void genWave(){
 //	for(int i=0; i<SIZE_WAVE_FORM; i++)

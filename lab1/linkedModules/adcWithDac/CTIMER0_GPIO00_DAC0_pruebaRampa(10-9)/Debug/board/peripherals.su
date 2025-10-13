@@ -1,0 +1,12 @@
+C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\CMSIS/core_cm33.h:2358:22:__NVIC_EnableIRQ	16	static
+C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\drivers/fsl_common_arm.h:672:24:EnableIRQ	24	static
+C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\drivers/fsl_ctimer.h:517:20:CTIMER_StartTimer	16	static
+C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\drivers/fsl_spc.h:1093:20:SPC_EnableActiveModeAnalogModules	16	static
+C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\drivers/fsl_lpadc.h:938:20:LPADC_EnableInterrupts	16	static
+../board/peripherals.c:138:13:CTIMER0_init	8	static
+../board/peripherals.c:186:13:GPIO0_init	8	static
+../board/peripherals.c:247:13:DAC0_init	8	static
+../board/peripherals.c:368:13:ADC0_init	8	static
+../board/peripherals.c:416:13:VREF0_init	8	static
+../board/peripherals.c:426:6:BOARD_InitPeripherals	8	static
+../board/peripherals.c:439:6:BOARD_InitBootPeripherals	8	static

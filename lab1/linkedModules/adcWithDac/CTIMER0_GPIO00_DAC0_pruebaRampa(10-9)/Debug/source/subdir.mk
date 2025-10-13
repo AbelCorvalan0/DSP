@@ -1,0 +1,34 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+# Add inputs and outputs from these tool invocations to the build variables 
+C_SRCS += \
+../source/CTIMER0_GPIO00_LEDRGB-ConInterrupciones.c \
+../source/semihost_hardfault.c 
+
+C_DEPS += \
+./source/CTIMER0_GPIO00_LEDRGB-ConInterrupciones.d \
+./source/semihost_hardfault.d 
+
+OBJS += \
+./source/CTIMER0_GPIO00_LEDRGB-ConInterrupciones.o \
+./source/semihost_hardfault.o 
+
+
+# Each subdirectory must supply rules for building sources it contributes
+source/%.o: ../source/%.c source/subdir.mk
+	@echo 'Building file: $<'
+	@echo 'Invoking: MCU C Compiler'
+	arm-none-eabi-gcc -std=gnu99 -D__REDLIB__ -DCPU_MCXN947VDF -DCPU_MCXN947VDF_cm33 -DCPU_MCXN947VDF_cm33_core0 -DMCUXPRESSO_SDK -DSDK_DEBUGCONSOLE=1 -DMCUX_META_BUILD -DMCXN947_cm33_core0_SERIES -DCR_INTEGER_PRINTF -DPRINTF_FLOAT_ENABLE=0 -D__MCUXPRESSO -D__USE_CMSIS -DDEBUG -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\drivers" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\CMSIS" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\CMSIS\m-profile" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\device" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\device\periph" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\utilities" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\utilities\str" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\utilities\debug_console_lite" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\component\uart" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\source" -I"C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\board" -O0 -fno-common -g3 -gdwarf-4 -mcpu=cortex-m33 -c -ffunction-sections -fdata-sections -fno-builtin -imacros "C:\Users\ferok\Documents\MCUXpressoIDE_25.6.136\workspace_FRDMMCXN947\CTIMER0_GPIO00_DAC0_pruebaRampa\source\mcux_config.h" -fmerge-constants -fmacro-prefix-map="$(<D)/"= -mcpu=cortex-m33 -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -D__REDLIB__ -fstack-usage -specs=redlib.specs -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	@echo 'Finished building: $<'
+	@echo ' '
+
+
+clean: clean-source
+
+clean-source:
+	-$(RM) ./source/CTIMER0_GPIO00_LEDRGB-ConInterrupciones.d ./source/CTIMER0_GPIO00_LEDRGB-ConInterrupciones.o ./source/semihost_hardfault.d ./source/semihost_hardfault.o
+
+.PHONY: clean-source
+
