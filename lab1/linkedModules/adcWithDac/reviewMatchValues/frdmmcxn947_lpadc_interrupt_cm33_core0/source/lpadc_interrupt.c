@@ -166,7 +166,7 @@ void loadData                 (void);
 
 /* Test functions */
 void delay          (uint32_t times);
-void showSamplesIntoDAC       (void);
+void showSamplesInDAC         (void);
 /*******************************************************************************
  * Code
  ******************************************************************************/
@@ -425,6 +425,18 @@ void configMat3Pin(){
                      | PORT_PCR_IBE(0x01u));
 
 }
+//
+//void configMat2Pin(){
+//    /* PORT0_5 (pin A14) is configured as CT0_MAT2 */
+//    PORT_SetPinMux(PORT0, 5U, kPORT_MuxAlt4);
+//
+//    PORT0->PCR[5] = ((PORT0->PCR[5] &
+//                      /* Mask bits to zero which are setting */
+//                      (~(PORT_PCR_IBE_MASK)))
+//
+//                     /* Input Buffer Enable: Enables. */
+//                     | PORT_PCR_IBE(0x01u));
+//}
 
 
 void configTimerMatch(){
@@ -433,7 +445,7 @@ void configTimerMatch(){
 
 	CTIMER0_config.mode     = kCTIMER_TimerMode;
 	CTIMER0_config.input    = 0; //kCTIMER_Capture_0
-	CTIMER0_config.prescale = 1;
+	CTIMER0_config.prescale = 1; //1n  //FRO_HF      96MHz
 	/* CTIMER0 peripheral initialization */
 	CTIMER_Init(CTIMER0, &CTIMER0_config);
 
@@ -441,7 +453,8 @@ void configTimerMatch(){
     ctimer_match_config_t CTIMER0_Match_3_config;
 
     // Match value 1 second.
-    CTIMER0_Match_3_config.matchValue         =                999999;
+    // Match 999 999 with prescale=1.
+    CTIMER0_Match_3_config.matchValue         =                   90;	//191
 	CTIMER0_Match_3_config.enableCounterReset =                  true;
 	CTIMER0_Match_3_config.enableCounterStop  =                 false;
 	CTIMER0_Match_3_config.outControl         = kCTIMER_Output_Toggle;
@@ -450,6 +463,24 @@ void configTimerMatch(){
 
 	/* Match channel 3 of CTIMER0 peripheral initialization */
 	CTIMER_SetupMatch(CTIMER0, kCTIMER_Match_3, &CTIMER0_Match_3_config);
+
+	/* Match 2 configuration */
+	// It will be the time base for DAC.
+    ctimer_match_config_t CTIMER0_Match_2_config;
+
+    // Match value 1usecond.
+    CTIMER0_Match_2_config.matchValue         =                      95;  //
+	CTIMER0_Match_2_config.enableCounterReset =                    true;
+	CTIMER0_Match_2_config.enableCounterStop  =                   false;
+	CTIMER0_Match_2_config.outControl         = kCTIMER_Output_NoAction;
+	CTIMER0_Match_2_config.outPinInitState    =                   false;
+	CTIMER0_Match_2_config.enableInterrupt    =                    true;
+
+	/* Match channel 3 of CTIMER0 peripheral initialization */
+	CTIMER_SetupMatch(CTIMER0, kCTIMER_Match_2, &CTIMER0_Match_2_config);
+
+	__NVIC_EnableIRQ(CTIMER0_IRQn);
+	__NVIC_SetPriority(CTIMER0_IRQn, 0);
 	/* Start the timer */
 	CTIMER_StartTimer(CTIMER0);
 }
@@ -461,20 +492,52 @@ void CTIMER0_IRQHandler()
 //	valueDAC = waveForm[index]; //VEMOS EL VALOR ACTUAL DEL DAC
 //	DAC_SetData(DAC0, waveForm[index]);
 //	index = (index+1)% SIZE_WAVE_FORM;		//INDICE CIRCULAR
+	uint32_t statusFlags = CTIMER_GetStatusFlags(CTIMER0);
+	static int index= 0;
 
-	PRINTF("ADC conversion, MATCH3 T0: \r\n");
-	LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
-	//while (!g_LpadcConversionCompletedFlag){}
-	PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
-			((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
-	loadData();
-	g_LpadcConversionCompletedFlag = false;
+
+	/* TEST DAC */
+	//void showSamplesIntoDAC(){
+	//
+	//	static int indexWaveForm= 0;
+	//	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
+	//    dacValue = waveForm[indexWaveForm]; // Show actual value.
+	//    //dacValue = 3000;
+	//	DAC_SetData(DAC0, dacValue);
+	//	delay(100);
+	//	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
+	//}
+
+	// Buffer
+	//PRINTF("SHOW BUFFER: \r\n");
+	//showBuffer();
+
+	if(statusFlags & kCTIMER_Match3Flag){
+		PRINTF("ADC conversion, MATCH3 T0: \r\n");
+		LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
+		//while (!g_LpadcConversionCompletedFlag){}
+		PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
+				((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
+		loadData();
+		g_LpadcConversionCompletedFlag = false;
+		//showSamplesInDAC();
+		showDataInDAC();
+	}
+
+
+	//showBuffer();
+	//kCTIMER_Match2Flag (real)
+
+//	if(statusFlags & kCTIMER_Match2Flag){
+//		showDataInDAC();
+//		showSamplesInDAC();
+//	}
 
 	//showBuffer();
 
 	// Write sample in DAC pin.
 	//showDataInDAC();
-
+	CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match2Flag);//LIMPIO FLAG DE TIMER 0
 	CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match3Flag);//LIMPIO FLAG DE TIMER 0
 
 }
@@ -494,24 +557,6 @@ void GPIO00_IRQHandler()  // SE MODIFICA LA FRECUENCIA DE TIMER0
 
 	  //}
 	if(SW2){
-		// Not necessary.
-//		switch(g_fs){
-//			case f8k:
-//				matchNewValue= s_ticksFs[g_fs];
-//				break;
-//			case f16k:
-//				matchNewValue= s_ticksFs[g_fs];
-//				break;
-//			case f22k:
-//				matchNewValue= s_ticksFs[g_fs];
-//				break;
-//			case f44k:
-//				matchNewValue= s_ticksFs[g_fs];
-//				break;
-//			case f48k:
-//				matchNewValue= s_ticksFs[g_fs];
-//				break;
-//	    }
 		matchNewValue= s_ticksFs[g_fs];
 		PRINTF("Sample frequency: %u\r\n", s_ticksFs[g_fs]);
 		setNewMatch(matchNewValue*1e3);
@@ -553,24 +598,25 @@ void setNewMatch(uint32_t newMatch)
 //}
 
 /* TEST DAC */
-//void showSamplesIntoDAC(){
-//
-//	static int indexWaveForm= 0;
-//	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
-//    dacValue = waveForm[indexWaveForm]; // Show actual value.
-//    //dacValue = 3000;
-//	DAC_SetData(DAC0, dacValue);
-//	delay(100);
-//	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
-//}
+void showSamplesInDAC(){
+
+	static int indexWaveForm= 0;
+	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
+    dacValue = waveForm[indexWaveForm]; // Show actual value.
+    //dacValue = 3000;
+	DAC_SetData(DAC0, dacValue);
+	//delay(100);
+	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
+}
 
 void showDataInDAC(){
 	static int indexWaveForm2= 0;
 	PRINTF("El valor en DAC en la posición %d es: %u\r\n", indexWaveForm2, buffer1[indexWaveForm2]>>3);
     dacValue = buffer1[indexWaveForm2]>>3; //VEMOS EL VALOR ACTUAL DEL DAC
+    PRINTF("VALOR A ESCRIBIR EN EL DAC %d es: %u\r\n", dacValue);
     //dacValue = 3000;
 	DAC_SetData(DAC0, dacValue);
-	delay(3000);
+	//delay(3000);
 	indexWaveForm2 = (indexWaveForm2+1)% BUFFER_SIZE;
 }
 
