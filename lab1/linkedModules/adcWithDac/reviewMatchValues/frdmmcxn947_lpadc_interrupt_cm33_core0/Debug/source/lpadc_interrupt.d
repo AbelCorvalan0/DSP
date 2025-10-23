@@ -102,6 +102,8 @@ source/lpadc_interrupt.o source/lpadc_interrupt.d: \
  /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_lpadc.h \
  /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_spc.h \
  /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_port.h \
+ /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_inputmux.h \
+ /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_inputmux_connections.h \
  /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_dac.h \
  /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_ctimer.h
 /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/source/mcux_config.h:
@@ -206,5 +208,7 @@ source/lpadc_interrupt.o source/lpadc_interrupt.d: \
 /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_lpadc.h:
 /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_spc.h:
 /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_port.h:
+/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_inputmux.h:
+/home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_inputmux_connections.h:
 /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_dac.h:
 /home/abel/Documents/MCUXpresso_25.6.136/workspaceMCX/frdmmcxn947_lpadc_interrupt_cm33_core0/drivers/fsl_ctimer.h:

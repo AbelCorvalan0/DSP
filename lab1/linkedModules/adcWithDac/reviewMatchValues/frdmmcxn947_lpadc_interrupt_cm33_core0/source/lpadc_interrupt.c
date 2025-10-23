@@ -15,6 +15,7 @@
 #include "fsl_spc.h"
 
 #include "fsl_port.h"
+#include "fsl_inputmux.h"
 #include "fsl_gpio.h"
 #include "fsl_dac.h"
 #include "fsl_ctimer.h"
@@ -63,6 +64,10 @@ uint32_t matchNewValue= 999999;
 // Buffer's data
 static uint16_t buffer1[BUFFER_SIZE];
 //static int ind=0;
+
+/* ADC Value */
+volatile uint16_t adcValue =       0;
+
 
 /* DAC variables */
 volatile uint16_t dacValue =       0;
@@ -141,7 +146,7 @@ uint16_t waveForm[512] = {
 };
 
 /* Clock configurations */
-void configClocks       (void);
+void configClocks             (void);
 
 /* Pin configuration functions */
 void configGpioPin            (void);
@@ -151,6 +156,7 @@ void configDacPin             (void);
 
 /* Functional functions */
 void setNewMatch (uint32_t newMatch);
+void configAdcInt             (void);
 void configDac                (void);
 void showDataInDAC            (void);
 
@@ -170,19 +176,19 @@ void showSamplesInDAC         (void);
 /*******************************************************************************
  * Code
  ******************************************************************************/
-void DEMO_LPADC_IRQ_HANDLER_FUNC(void)
-{
-    g_LpadcInterruptCounter++;
-#if (defined(FSL_FEATURE_LPADC_FIFO_COUNT) && (FSL_FEATURE_LPADC_FIFO_COUNT == 2U))
-    if (LPADC_GetConvResult(DEMO_LPADC_BASE, &g_LpadcResultConfigStruct, 0U))
-#else
-    if (LPADC_GetConvResult(DEMO_LPADC_BASE, &g_LpadcResultConfigStruct))
-#endif /* FSL_FEATURE_LPADC_FIFO_COUNT */
-    {
-        g_LpadcConversionCompletedFlag = true;
-    }
-    SDK_ISR_EXIT_BARRIER;
-}
+//void DEMO_LPADC_IRQ_HANDLER_FUNC(void)
+//{
+//    g_LpadcInterruptCounter++;
+//#if (defined(FSL_FEATURE_LPADC_FIFO_COUNT) && (FSL_FEATURE_LPADC_FIFO_COUNT == 2U))
+//    if (LPADC_GetConvResult(DEMO_LPADC_BASE, &g_LpadcResultConfigStruct, 0U))
+//#else
+//    if (LPADC_GetConvResult(DEMO_LPADC_BASE, &g_LpadcResultConfigStruct))
+//#endif /* FSL_FEATURE_LPADC_FIFO_COUNT */
+//    {
+//        g_LpadcConversionCompletedFlag = true;
+//    }
+//    SDK_ISR_EXIT_BARRIER;
+//}
 
 /*!
  * @brief Main function
@@ -259,6 +265,7 @@ int main(void)
 
     /* Set conversion CMD configuration. */
     LPADC_GetDefaultConvCommandConfig(&mLpadcCommandConfigStruct);
+
     mLpadcCommandConfigStruct.channelNumber = DEMO_LPADC_USER_CHANNEL;
 #if defined(DEMO_LPADC_USE_HIGH_RESOLUTION) && DEMO_LPADC_USE_HIGH_RESOLUTION
     mLpadcCommandConfigStruct.conversionResolutionMode = kLPADC_ConversionResolutionHigh;
@@ -267,8 +274,8 @@ int main(void)
 
     /* Set trigger configuration. */
     LPADC_GetDefaultConvTriggerConfig(&mLpadcTriggerConfigStruct);
-    mLpadcTriggerConfigStruct.targetCommandId       = DEMO_LPADC_USER_CMDID;     /* CMD15 is executed. */
-    mLpadcTriggerConfigStruct.enableHardwareTrigger = false;
+    mLpadcTriggerConfigStruct.targetCommandId       = DEMO_LPADC_USER_CMDID;//DEMO_LPADC_USER_CMDID;     /* CMD15 is executed. */
+    mLpadcTriggerConfigStruct.enableHardwareTrigger = true;
     LPADC_SetConvTriggerConfig(DEMO_LPADC_BASE, 0U, &mLpadcTriggerConfigStruct); /* Configurate the trigger0. */
 
     /* Enable the watermark interrupt. */
@@ -277,7 +284,7 @@ int main(void)
 #else
     LPADC_EnableInterrupts(DEMO_LPADC_BASE, kLPADC_FIFOWatermarkInterruptEnable);
 #endif /* FSL_FEATURE_LPADC_FIFO_COUNT */
-    EnableIRQ(DEMO_LPADC_IRQn);
+    //EnableIRQ(DEMO_LPADC_IRQn);
 
     PRINTF("ADC Full Range: %d\r\n", g_LpadcFullRange);
 #if defined(FSL_FEATURE_LPADC_HAS_CMDL_CSCALE) && FSL_FEATURE_LPADC_HAS_CMDL_CSCALE
@@ -298,13 +305,14 @@ int main(void)
     showBuffer       ();
 
     configGpioPin    ();
-    configMat3Pin    ();
     configDacPin     ();
+    configDac        ();
+    configMat3Pin    ();
+    configTimerMatch ();
+    configAdcInt     ();
+
 
     EnableIRQ(GPIO00_IRQn);
-
-    configTimerMatch ();
-    configDac        ();
 
     //EnableIRQ(CTIMER0_IRQn);
     PRINTF("Please press any key to get user channel's ADC value.\r\n");
@@ -312,7 +320,6 @@ int main(void)
     {
     	//showSamplesIntoDAC();
         //GETCHAR();
-
     }
 }
 
@@ -347,9 +354,27 @@ void configGpioPin(void){
 
 }
 
+void configAdcInt(){
+	//INPUTMUX->ADC0_TRIG = 0;
+
+	INPUTMUX_Init(INPUTMUX); //PARA INCIAR LA CONEXION DE PERIFERICOS O PINES
+	INPUTMUX_AttachSignal(INPUTMUX, 0, kINPUTMUX_Ctimer0M3ToAdc0Trigger); //CONECTA LA SALIDA DEL TIMER0 MATCH3 AL TRIGER0 DEL ADC0.0
+	//INPUTMUX_Deinit(INPUTMUX); // FINALIZO CONEXION DE PERIFERICOS O PINES
+
+    LPADC_EnableInterrupts(ADC0, kLPADC_Trigger5CompletionInterruptEnable);
+
+	//EnableIRQ(ADC0_IRQn); //HABILITO INT ADC0
+
+	EnableIRQ(ADC0_IRQn);
+	//__NVIC_SetPriority(ADC0_IRQn, 0);
+}
+
 void loadData(){
 	static int k= 0;
-    buffer1[k]= (g_LpadcResultConfigStruct.convValue);
+	lpadc_conv_result_t result;
+	LPADC_GetConvResult(ADC0, &result, 0);
+
+	buffer1[k]= (result.convValue);
     PRINTF("The sample was loaded successfully \r\n");
     k= (k + 1)%BUFFER_SIZE;
 }
@@ -425,18 +450,6 @@ void configMat3Pin(){
                      | PORT_PCR_IBE(0x01u));
 
 }
-//
-//void configMat2Pin(){
-//    /* PORT0_5 (pin A14) is configured as CT0_MAT2 */
-//    PORT_SetPinMux(PORT0, 5U, kPORT_MuxAlt4);
-//
-//    PORT0->PCR[5] = ((PORT0->PCR[5] &
-//                      /* Mask bits to zero which are setting */
-//                      (~(PORT_PCR_IBE_MASK)))
-//
-//                     /* Input Buffer Enable: Enables. */
-//                     | PORT_PCR_IBE(0x01u));
-//}
 
 
 void configTimerMatch(){
@@ -444,8 +457,8 @@ void configTimerMatch(){
 	ctimer_config_t CTIMER0_config;
 
 	CTIMER0_config.mode     = kCTIMER_TimerMode;
-	CTIMER0_config.input    = 0; //kCTIMER_Capture_0
-	CTIMER0_config.prescale = 1; //1n  //FRO_HF      96MHz
+	CTIMER0_config.input    =                 0; //kCTIMER_Capture_0
+	CTIMER0_config.prescale =                 1; //1n  //FRO_HF      96MHz
 	/* CTIMER0 peripheral initialization */
 	CTIMER_Init(CTIMER0, &CTIMER0_config);
 
@@ -454,130 +467,95 @@ void configTimerMatch(){
 
     // Match value 1 second.
     // Match 999 999 with prescale=1.
-    CTIMER0_Match_3_config.matchValue         =                   90;	//191
-	CTIMER0_Match_3_config.enableCounterReset =                  true;
-	CTIMER0_Match_3_config.enableCounterStop  =                 false;
-	CTIMER0_Match_3_config.outControl         = kCTIMER_Output_Toggle;
-	CTIMER0_Match_3_config.outPinInitState    =                 false;
-	CTIMER0_Match_3_config.enableInterrupt    =                  true;
+    CTIMER0_Match_3_config.matchValue         =                      90;	//191
+	CTIMER0_Match_3_config.enableCounterReset =                    true;
+	CTIMER0_Match_3_config.enableCounterStop  =                   false;
+	CTIMER0_Match_3_config.outControl         = kCTIMER_Output_Toggle; //kCTIMER_Output_Toggle  //kCTIMER_Output_NoAction
+	CTIMER0_Match_3_config.outPinInitState    =                   false;
+	CTIMER0_Match_3_config.enableInterrupt    =                   false;
 
 	/* Match channel 3 of CTIMER0 peripheral initialization */
 	CTIMER_SetupMatch(CTIMER0, kCTIMER_Match_3, &CTIMER0_Match_3_config);
 
-	/* Match 2 configuration */
-	// It will be the time base for DAC.
-    ctimer_match_config_t CTIMER0_Match_2_config;
-
-    // Match value 1usecond.
-    CTIMER0_Match_2_config.matchValue         =                      95;  //
-	CTIMER0_Match_2_config.enableCounterReset =                    true;
-	CTIMER0_Match_2_config.enableCounterStop  =                   false;
-	CTIMER0_Match_2_config.outControl         = kCTIMER_Output_NoAction;
-	CTIMER0_Match_2_config.outPinInitState    =                   false;
-	CTIMER0_Match_2_config.enableInterrupt    =                    true;
-
-	/* Match channel 3 of CTIMER0 peripheral initialization */
-	CTIMER_SetupMatch(CTIMER0, kCTIMER_Match_2, &CTIMER0_Match_2_config);
-
-	__NVIC_EnableIRQ(CTIMER0_IRQn);
-	__NVIC_SetPriority(CTIMER0_IRQn, 0);
 	/* Start the timer */
 	CTIMER_StartTimer(CTIMER0);
 }
 
-void CTIMER0_IRQHandler()
-{
-//    //PRINTF("FLAG GPIO0_6 = %d \r\n", GPIO_PinGetInterruptFlag(GPIO0, 6));
+//void ADC0_IRQHandler(){
 //
-//	valueDAC = waveForm[index]; //VEMOS EL VALOR ACTUAL DEL DAC
-//	DAC_SetData(DAC0, waveForm[index]);
-//	index = (index+1)% SIZE_WAVE_FORM;		//INDICE CIRCULAR
-	uint32_t statusFlags = CTIMER_GetStatusFlags(CTIMER0);
-	static int index= 0;
-
-
-	/* TEST DAC */
-	//void showSamplesIntoDAC(){
-	//
-	//	static int indexWaveForm= 0;
-	//	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
-	//    dacValue = waveForm[indexWaveForm]; // Show actual value.
-	//    //dacValue = 3000;
-	//	DAC_SetData(DAC0, dacValue);
-	//	delay(100);
-	//	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
-	//}
-
-	// Buffer
-	//PRINTF("SHOW BUFFER: \r\n");
-	//showBuffer();
-
-	if(statusFlags & kCTIMER_Match3Flag){
-		PRINTF("ADC conversion, MATCH3 T0: \r\n");
-		LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
-		//while (!g_LpadcConversionCompletedFlag){}
-		PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
-				((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
-		loadData();
-		g_LpadcConversionCompletedFlag = false;
-		//showSamplesInDAC();
-		showDataInDAC();
-	}
-
-
-	//showBuffer();
-	//kCTIMER_Match2Flag (real)
-
-//	if(statusFlags & kCTIMER_Match2Flag){
-//		showDataInDAC();
-//		showSamplesInDAC();
-//	}
-
-	//showBuffer();
-
-	// Write sample in DAC pin.
-	//showDataInDAC();
-	CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match2Flag);//LIMPIO FLAG DE TIMER 0
-	CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match3Flag);//LIMPIO FLAG DE TIMER 0
-
-}
-//void GPIO00_DriverIRQHandler()
-void GPIO00_IRQHandler()  // SE MODIFICA LA FRECUENCIA DE TIMER0
+//
+//	//uint32_t statusFlags = CTIMER_GetStatusFlags(CTIMER0);
+//	static int index= 0;
+//
+//	// Buffer
+//	//PRINTF("SHOW BUFFER: \r\n");
+//	//showBuffer();
+//
+//	//if(statusFlags & kCTIMER_Match3Flag){
+//		PRINTF("ADC conversion, MATCH3 T0: \r\n");
+//		//LPADC_DoSoftwareTrigger(DEMO_LPADC_BASE, 1U); /* 1U is trigger0 mask. */
+//	//while (!g_LpadcConversionCompletedFlag){}
+//		PRINTF("ADC value: %d\r\nADC interrupt count: %d\r\n",
+//				((g_LpadcResultConfigStruct.convValue) >> g_LpadcResultShift), g_LpadcInterruptCounter);
+//		//loadData();
+//		//showBuffer();
+//		//g_LpadcConversionCompletedFlag = false;
+//	// Write sine samples waveForm (TEST).
+//	//showSamplesInDAC();
+//	// Write sample in DAC pin.
+//	//showDataInDAC();
+//	//}
+//	LPADC_ClearStatusFlags(ADC0, 0);
+//	//CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match3Flag);//LIMPIO FLAG DE TIMER 0
+//
+//}
+void ADC0_IRQHandler(void)
 {
+
+	  PRINTF("PASO POR INTER ADC0: \r\n");
+	  uint32_t trigger_status_flag;
+	  uint32_t status_flag;
+	  /* Trigger interrupt flags */
+	  trigger_status_flag = LPADC_GetTriggerStatusFlags(ADC0);
+	  /* Interrupt flags */
+	  status_flag = LPADC_GetStatusFlags(ADC0);
+	  /* Clears trigger interrupt flags */
+	  LPADC_ClearTriggerStatusFlags(ADC0, trigger_status_flag);
+	  /* Clears interrupt flags */
+	  LPADC_ClearStatusFlags(ADC0, status_flag);
+
+	  /* Place your code here */
+
+	  lpadc_conv_result_t result;
+
+	  LPADC_GetConvResult(ADC0, &result, 0);
+	  adcValue = result.convValue;
+	  PRINTF("ADC value: %d\r\n", adcValue); //(unsigned int)%u
+	  loadData();
+	  showDataInDAC();
+	  LPADC_ClearStatusFlags(ADC0, 0);
+}
+
+
+
+
+void GPIO00_IRQHandler(){
 	PRINTF("PASO POR INTER GPIO0: \r\n");
 
-	//SW3 = GPIO_PinGetInterruptFlag(GPIO0, 6); //FLAG DE INTERRUPCION SI PRESIONE PULSADOR SW3 FLANCO DE SUBIDA
 	SW2 = GPIO_PinGetInterruptFlag(GPIO0, 23); //FLAG DE INTERRUPCION SI PRESIONE PULSADOR SW2 FLANCO DE BAJADA
 
-	  //if(SW3)	//SI SW3 INTERRUMPIO
-	  //{
-		 ////matchNewValue = matchNewValue/2; //DISMINUIMOS EL TIEMPO EN LA MITAD
-		 //confTimer0(matchNewValue);		//CARGAMOS EL NUEVO MATCH A TIMER0
-		 ////setNewMatch(matchNewValue);
-
-	  //}
 	if(SW2){
 		matchNewValue= s_ticksFs[g_fs];
 		PRINTF("Sample frequency: %u\r\n", s_ticksFs[g_fs]);
 		setNewMatch(matchNewValue*1e3);
 		g_fs= (g_fs+1)%fsCount;
-		////matchNewValue = matchNewValue*2; //AUMENTAMOS EL TIEMPO AL DOBLE
-		//confTimer0(matchNewValue);		//CARGAMOS EL NUEVO MATCH A TIMER0
-		////setNewMatch(matchNewValue);
 	}
 
-	//LED_RED1_INIT(LOGIC_LED_OFF); //PARA QUE LED_GREEN Y LED_RED TOGGLEN DE FORMA OPUESTA
-	//LED_GREEN_ON();//
-
-	//GPIO_PinClearInterruptFlag(GPIO0, 6); //LIMPIO FLAG DE SW3 (GPIO0 PIN 6)
 	GPIO_PinClearInterruptFlag(GPIO0, 23); //LIMPIO FLAG DE SW2 (GPIO0 PIN 23)
-
-
 }
 
 void setNewMatch(uint32_t newMatch)
 {
-
     // Limpiar cualquier flag pendiente
     CTIMER_ClearStatusFlags(CTIMER0, kCTIMER_Match3Flag);
 
@@ -587,6 +565,7 @@ void setNewMatch(uint32_t newMatch)
     CTIMER0->MR[3] = newMatch;
 }
 
+/* Generate ramp wave */
 //void genWave(){
 //	for(int i=0; i<SIZE_WAVE_FORM; i++)
 //	{
@@ -603,12 +582,11 @@ void showSamplesInDAC(){
 	static int indexWaveForm= 0;
 	PRINTF("El valor en la posición %d es: %u\r\n", indexWaveForm, waveForm[indexWaveForm]);
     dacValue = waveForm[indexWaveForm]; // Show actual value.
-    //dacValue = 3000;
 	DAC_SetData(DAC0, dacValue);
-	//delay(100);
 	indexWaveForm = (indexWaveForm+1)% SIZE_WAVE_FORM;
 }
 
+/* Show data from TEST WAVE in DAC */
 void showDataInDAC(){
 	static int indexWaveForm2= 0;
 	PRINTF("El valor en DAC en la posición %d es: %u\r\n", indexWaveForm2, buffer1[indexWaveForm2]>>3);
@@ -620,7 +598,3 @@ void showDataInDAC(){
 	indexWaveForm2 = (indexWaveForm2+1)% BUFFER_SIZE;
 }
 
-void delay(uint32_t times){
-	for(uint32_t i=0; i<times; i++)
-		for(uint32_t j=0; j<times; j++);
-}

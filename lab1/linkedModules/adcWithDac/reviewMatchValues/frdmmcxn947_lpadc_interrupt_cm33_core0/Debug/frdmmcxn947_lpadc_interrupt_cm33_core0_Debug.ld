@@ -6,7 +6,7 @@
  * Generated linker script file for MCXN947
  * Created from linkscript.ldt by FMCreateLinkLibraries
  * Using Freemarker v2.3.30
- * MCUXpresso IDE v25.6 [Build 136] [2025-06-27] on Oct 16, 2025, 3:27:47 PM
+ * MCUXpresso IDE v25.6 [Build 136] [2025-06-27] on Oct 22, 2025, 11:52:42 PM
  */
 
 INCLUDE "frdmmcxn947_lpadc_interrupt_cm33_core0_Debug_library.ld"
